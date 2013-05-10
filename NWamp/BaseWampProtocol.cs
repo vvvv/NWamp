@@ -1,12 +1,12 @@
-using System;
-using NWamp.Transport;
-using NWamp.Protocol.Messages;
-
 namespace NWamp
 {
+    using System;
+    using NWamp.Protocol.Messages;
 
     /// <summary>
     /// Base class used by both, server- and client-side WAMP implementations.
+    /// Don't derive from it, until it's realy needed. Instead use <see cref="WampListener"/>
+    /// or <see cref="WampClient"/> classes.
     /// </summary>
     public abstract class BaseWampProtocol
     {
@@ -32,7 +32,6 @@ namespace NWamp
         /// Creates new session id.
         /// </summary>
         /// <param name="size">Session key length.</param>
-        /// <returns></returns>
         protected string GenerateSessionKey(int size=16)
         {
             const string alphas =

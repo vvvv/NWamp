@@ -1,11 +1,11 @@
-using System.IO;
-using System.Runtime.Serialization.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace NWamp
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Runtime.Serialization.Json;
+    using System.Text;
+
     /// <summary>
     /// Default implementation of JSON serializer using native .NET library
     /// and <see cref="DataContractJsonSerializer"/> class.

@@ -1,7 +1,7 @@
-using System;
-
 namespace NWamp
 {
+    using System;
+
     /// <summary>
     /// Event arguments associated with target session event.
     /// </summary>

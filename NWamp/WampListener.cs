@@ -1,46 +1,57 @@
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using NWamp.Protocol.Events;
-using NWamp.Protocol.Messages;
-using NWamp.Protocol.Rpc;
-using NWamp.Transport;
-using System;
-using System.Threading.Tasks;
-using NWamp.Mapping;
-
 namespace NWamp
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using NWamp.Mapping;
+    using NWamp.Protocol.Events;
+    using NWamp.Protocol.Messages;
+    using NWamp.Protocol.Rpc;
+    using NWamp.Transport;
+
     /// <summary>
-    /// Server-side listener using WAMP protocol.
+    /// Server-side listener using WAMP protocol. Derive from this class to create working 
+    /// Websocket Application Message Protocol server-side listener based on choosen web sockets implementation.
     /// </summary>
-    public class WampListener : BaseWampProtocol, IRpcHandler, IWampSubscriber, IDisposable
+    public abstract class WampListener : BaseWampProtocol, IRpcHandler, IWampSubscriber, IDisposable
     {
         #region Properties & Fields
 
         /// <summary>
-        /// Dictionary containing list of actualy 
-        /// connected clients recognized by their session ids.
+        /// Dictionary containing list of actualy connected clients recognized by their session ids.
         /// </summary>
         protected readonly IDictionary<string, IWampConnection> connections;
 
         /// <summary>
-        /// Map of topics and their subscribers sessions.
+        /// Map of topics and their subscribers sessions hashes.
         /// </summary>
         protected readonly IDictionary<string, HashSet<string>> topics;
 
         /// <summary>
-        /// Map of procedures associated with RPC action calls.
+        /// Map of procedures associated with RPC action calls. Procedures are just simple
+        /// .NET methods represented in form of the delegates. 
         /// </summary>
+        /// <remarks>
+        /// Key is procedure id used to recognize registered method handler from client-side perspective.
+        /// 
+        /// Func&lt;object[], object&gt; is a generalization. You may create specialized generic methods
+        /// by using extension methods found in <see cref="RpcExtensions"/> class.
+        /// </remarks>
         protected readonly IDictionary<string, Func<object[], object>> procedures;
 
         /// <summary>
-        /// List of RPC calls realized at the moment.
+        /// List of RPC calls realized at the moment. Each RPC call is realized asynchronously
+        /// to asure, that current listener will not be blocked by the call.
         /// </summary>
         private readonly ConcurrentDictionary<string, Task> calls;
 
         /// <summary>
-        /// Collection of RPC calls realized at the moment.
+        /// Gets collection of RPC calls realized at the moment. Each RPC call is realized asynchronously
+        /// to asure, that current listener will not be blocked by the call.
+        /// 
+        /// Keys are session hashes used to recognize requester's connections.
         /// </summary>
         public IDictionary<string, Task> CurrentCalls
         {
@@ -48,7 +59,10 @@ namespace NWamp
         }
 
         /// <summary>
-        /// Determines, if listener should block creating topics on client's demand.
+        /// Gets or sets value determining, if listener should block creating topics on client's demand.
+        /// 
+        /// If this property is set to true, client's could not create new topics on demand, they only
+        /// can join to topics created before.
         /// </summary>
         public bool FixedTopics { get; set; }
 
@@ -77,7 +91,7 @@ namespace NWamp
         public event RpcEventHandler CallInvoking;
 
         /// <summary>
-        /// Event raised when RPC call has ended.
+        /// Event raised when existing RPC call has ended.
         /// </summary>
         public event RpcEventHandler CallInvoked;
 
@@ -94,7 +108,7 @@ namespace NWamp
         /// <summary>
         /// Create new instance of <see cref="WampListener"/>.
         /// </summary>
-        /// <param name="serializer"></param>
+        /// <param name="serializer">Implementation of JSON serializer used for data parsing/serialization.</param>
         public WampListener(IJsonSerializer serializer) 
             : base(serializer)
         {
@@ -106,7 +120,10 @@ namespace NWamp
 
         /// <summary>
         /// Method invoked when new connection has been established.
+        /// 
+        /// Creates new session key and sends welcome message frame.
         /// </summary>
+        /// <param name="connection">Reference to web socket connection, allowing to push messages to clients.</param>
         public virtual void OnConnected(IWampConnection connection)
         {
             var sessionId = this.GenerateSessionKey();
@@ -126,8 +143,9 @@ namespace NWamp
 
         /// <summary>
         /// Method invoked when connection has been lost or closed.
+        /// Closes session removing session identifier.
         /// </summary>
-        /// <param name="connection"></param>
+        /// <param name="connection">Reference to disconnected or closed web socket connection.</param>
         public virtual void OnDiconnected(IWampConnection connection)
         {
             if (this.connections.ContainsKey(connection.SessionId))
@@ -141,8 +159,9 @@ namespace NWamp
 
         /// <summary>
         /// Method invoked when connection received a string message.
+        /// String messages are just serialized JSON arrays - WAMP protocol frames.
         /// </summary>
-        /// <param name="connection"></param>
+        /// <param name="connection">Reference to web socket connection, which sent a message.</param>
         public virtual void OnReceived(string json, IWampConnection connection)
         {
             var array = this.Serializer.DeserializeArray(json);
@@ -155,7 +174,13 @@ namespace NWamp
 
         /// <summary>
         /// Method invoked when new message has been received.
+        /// This method is called from within <see cref="OnReceived"/> method when JSON string 
+        /// has been deserialized successfully.
+        /// 
+        /// It calls specialized WAMP message frame handlers.
         /// </summary>
+        /// <param name="message">Deserialized WAMP message frame.</param>
+        /// <param name="connection">Reference to web socket connection, which sent a message.</param>
         protected bool OnMessageReceived(IWampMessage message, IWampConnection connection)
         {
             switch (message.Type)
@@ -182,35 +207,40 @@ namespace NWamp
 
         /// <summary>
         /// Method invoked when new <see cref="PublishMessage"/> has been received.
+        /// Publishes message event through all subbscribers defined inside message frame.
         /// </summary>
-        protected void OnPublishMessage(PublishMessage msg, IWampConnection connection)
+        protected void OnPublishMessage(PublishMessage message, IWampConnection connection)
         {
-            var topicId = connection.Prefixes.Map(msg.TopicUri);
-            this.Publish(topicId, connection.SessionId, msg.Event, msg.Eligibles, msg.Excludes, msg.ExcludeMe);
+            var topicId = connection.Prefixes.Map(message.TopicUri);
+            this.Publish(topicId, connection.SessionId, message.Event, message.Eligibles, message.Excludes, message.ExcludeMe);
         }
 
         /// <summary>
         /// Method invoked when new <see cref="UnsubscribeMessage"/> has been received.
+        /// Unsubscribes current <paramref name="connection"/> from topic sent with WAMP message frame.
         /// </summary>
-        protected void OnUnsubscribeMessage(UnsubscribeMessage msg, IWampConnection connection)
+        protected void OnUnsubscribeMessage(UnsubscribeMessage message, IWampConnection connection)
         {
-            var topicUri = connection.Prefixes.Map(msg.TopicUri);
+            var topicUri = connection.Prefixes.Map(message.TopicUri);
             this.Unsubscribe(topicUri, connection);
         }
 
         /// <summary>
         /// Method invoked when new <see cref="SubscribeMessage"/> has been received.
+        /// Subscribes current <paramref name="connection"/> to topic sent with WAMP message frame.
         /// </summary>
-        protected void OnSubscribeMessage(SubscribeMessage msg, IWampConnection connection)
+        protected void OnSubscribeMessage(SubscribeMessage message, IWampConnection connection)
         {
-            var topicUri = connection.Prefixes.Map(msg.TopicUri);
+            var topicUri = connection.Prefixes.Map(message.TopicUri);
             this.Subscribe(topicUri, connection);
         }
 
         /// <summary>
         /// Method invoked when new <see cref="CallMessage"/> has been received.
+        /// Begins asynchronous call of .NET method registered under 'call Id' found inside 
+        /// WAMP message frame.
         /// </summary>
-        protected void OnCallMessage(CallMessage msg, IWampConnection connection)
+        protected void OnCallMessage(CallMessage message, IWampConnection connection)
         {
             var callTask = Task.Factory.StartNew(obj =>
             {
@@ -224,13 +254,18 @@ namespace NWamp
                 var procUri = conn.Prefixes.Map(procId);
                 try
                 {
+                    // try to invoke registered method and return call result message frame
+
                     var result = this.Call(callId, procUri, args.ToArray());
                     var callResponse = new CallResultMessage(callId, result);
                     var json = this.Serializer.SerializeArray(callResponse.ToArray());
                     connection.SendMessage(json);
-                } // we can react on inner RPC procedures exception if they are thrown as   CallErrorExceptions
-                catch (CallErrorException exc)
+                }
+                catch (CallErrorException exc)  
                 {
+                    // we can react on inner RPC procedures exception if they are thrown as CallErrorExceptions
+                    // in that case, send call error message frame
+
                     var errorUri = (conn.Prefixes.ContainsMapping(exc.ErrorUri))
                                        ? conn.Prefixes.Map(exc.ErrorUri)
                                        : exc.ErrorUri;
@@ -247,19 +282,22 @@ namespace NWamp
                 finally
                 {
                     Task t;
-                    this.calls.TryRemove(callId, out t);
+                    this.calls.TryRemove(callId, out t);    // try to remove method call handler
 
-                    if (this.CallInvoked != null)
+                    // fire event on call finished
+                    if (this.CallInvoked != null)   
                         this.CallInvoked(this,
                             new RpcEventArgs(callId, procUri, conn.SessionId, exception));
                 }
-            }, new object[] { msg.CallId, msg.ProcUri, msg.Arguments, connection });
+            }, new object[] { message.CallId, message.ProcUri, message.Arguments, connection });
 
-            this.calls.TryAdd(msg.CallId, callTask);
+            // try to add method call handler
+            this.calls.TryAdd(message.CallId, callTask);
 
+            // fire event on call started
             if(this.CallInvoking != null)
-                this.CallInvoking(this, new RpcEventArgs(msg.CallId, 
-                    connection.Prefixes.Map(msg.ProcUri), connection.SessionId));
+                this.CallInvoking(this, new RpcEventArgs(message.CallId, 
+                    connection.Prefixes.Map(message.ProcUri), connection.SessionId));
         }
 
         /// <summary>
@@ -276,17 +314,21 @@ namespace NWamp
         #region IRpcHandler implementation
 
         /// <summary>
-        /// Calls a RPC procedure with provided params.
+        /// Calls a RPC procedure with provided params. This is a synchronous (thread-blocking) operation.
         /// </summary>
         /// <param name="callId">Client generated call identifier.</param>
         /// <param name="procId">URI procedure identfier.</param>
         /// <param name="args">Procedure invokation parameters.</param>
-        /// <returns></returns>
+        /// <returns>Result of method handler computations.</returns>
+        /// <exception cref="KeyNotFoundException">
+        /// Exception thrown when no method handler has been registered under provided <paramref name="procId"/>.
+        /// </exception>
         public object Call(string callId, string procId, object[] args)
         {
-            if (this.procedures.ContainsKey(procId))
+            Func<object[], object> func;
+            if (this.procedures.TryGetValue(procId, out func))
             {
-                return this.procedures[procId](args);
+                return func(args);
             }
             else
             {
@@ -298,20 +340,20 @@ namespace NWamp
         /// <summary>
         /// Registers new method handler for target RPC procedure URI.
         /// </summary>
-        /// <param name="procId"></param>
-        /// <param name="func"></param>
-        public void RegisterRpcAction(string procId, Func<object[], object> func)
+        /// <param name="procId">Procedure identifier.</param>
+        /// <param name="handler">Method handler.</param>
+        public void RegisterRpcAction(string procId, Func<object[], object> handler)
         {
             if (this.procedures.ContainsKey(procId))
-                this.procedures[procId] = func;
+                this.procedures[procId] = handler;
             else
-                this.procedures.Add(procId, func);
+                this.procedures.Add(procId, handler);
         }
 
         /// <summary>
         /// Unregisters RPC method handler recognized by it's procedure URI.
         /// </summary>
-        /// <param name="procId"></param>
+        /// <param name="procId">Procedure identifier.</param>
         public void UnregisterRpcAction(string procId)
         {
             if (this.procedures.ContainsKey(procId))
@@ -324,13 +366,13 @@ namespace NWamp
 
         /// <summary>
         /// Creates new topic with provided id. 
-        /// This method works only when <see cref="FixedTopics"/> flag is set on True.
+        /// This method works only when <see cref="FixedTopics"/> 
+        /// flag is set on True or <paramref name="force"/> argument is set.
         /// </summary>
-        /// <param name="topicId"></param>
         /// <returns>True if new topic has been created, false otherwise.</returns>
-        public bool CreateTopic(string topicId)
+        public bool CreateTopic(string topicId, bool force = false)
         {
-            if (!this.topics.ContainsKey(topicId) && this.FixedTopics)
+            if (!this.topics.ContainsKey(topicId) && (this.FixedTopics || force))
             {
                 this.topics.Add(topicId, new HashSet<string>());
                 return true;
@@ -340,13 +382,13 @@ namespace NWamp
 
         /// <summary>
         /// Removes existing topic with provided id. 
-        /// This method works only when <see cref="FixedTopics"/> flag is set on True.
+        /// This method works only when <see cref="FixedTopics"/> 
+        /// flag is set on True or <paramref name="force"/> argument is set.
         /// </summary>
-        /// <param name="topicId"></param>
         /// <returns>True if topic has been removed successfully, false otherwise.</returns>
-        public bool RemoveTopic(string topicId)
+        public bool RemoveTopic(string topicId, bool force = false)
         {
-            if (this.topics.ContainsKey(topicId) && this.FixedTopics)
+            if (this.topics.ContainsKey(topicId) && (this.FixedTopics || force))
             {
                 this.topics[topicId].Clear();
                 this.topics.Remove(topicId);
@@ -359,8 +401,6 @@ namespace NWamp
         /// Subscribes new WAMP connection to target topic. 
         /// If topic didn't exist before, then it'd be created.
         /// </summary>
-        /// <param name="topicId"></param>
-        /// <param name="connection"></param>
         public void Subscribe(string topicId, IWampConnection connection)
         {
             if (this.topics.ContainsKey(topicId))
@@ -373,8 +413,6 @@ namespace NWamp
         /// Unsubscribes a WAMP connection from target topic. 
         /// It also removes topic if none connections participate in it.
         /// </summary>
-        /// <param name="topicId"></param>
-        /// <param name="connection"></param>
         public void Unsubscribe(string topicId, IWampConnection connection)
         {
             if (this.topics.ContainsKey(topicId))
@@ -443,6 +481,8 @@ namespace NWamp
         }
 
         #endregion
+
+        public abstract void Listen();
 
         public virtual void Dispose()
         {

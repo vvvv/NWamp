@@ -1,8 +1,8 @@
-using System;
-using NWamp.Protocol.Rpc;
-
 namespace NWamp
 {
+    using System;
+    using NWamp.Protocol.Rpc;
+
     /// <summary>
     /// Collection of extension methods used for <see cref="IRpcHandler"/>.
     /// </summary>
@@ -10,6 +10,9 @@ namespace NWamp
     {
         #region Actions
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterAction(this IRpcHandler self, string procId, Action action)
         {
             self.RegisterRpcAction(procId, _ =>
@@ -19,6 +22,9 @@ namespace NWamp
             });
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterAction<T1>(this IRpcHandler self, string procId, Action<T1> action)
         {
             self.RegisterRpcAction(procId, args =>
@@ -38,6 +44,9 @@ namespace NWamp
             });
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterAction<T1, T2>(this IRpcHandler self, string procId, Action<T1, T2> action)
         {
             self.RegisterRpcAction(procId, args =>
@@ -56,6 +65,9 @@ namespace NWamp
             });
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterAction<T1, T2, T3>(this IRpcHandler self, string procId, Action<T1, T2, T3> action)
         {
             self.RegisterRpcAction(procId, args =>
@@ -74,6 +86,9 @@ namespace NWamp
             });
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterAction<T1, T2, T3, T4>(this IRpcHandler self, string procId, Action<T1, T2, T3, T4> action)
         {
             self.RegisterRpcAction(procId, args =>
@@ -96,11 +111,17 @@ namespace NWamp
 
         #region Functions
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterFunc<TResult>(this IRpcHandler self, string procId, Func<TResult> func)
         {
             self.RegisterRpcAction(procId, _ => func());
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterFunc<T1, TResult>(this IRpcHandler self, string procId, Func<T1, TResult> func)
         {
             self.RegisterRpcAction(procId, args =>
@@ -117,6 +138,9 @@ namespace NWamp
             });
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterFunc<T1, T2, TResult>(this IRpcHandler self, string procId, Func<T1, T2, TResult> func)
         {
             self.RegisterRpcAction(procId, args =>
@@ -134,6 +158,9 @@ namespace NWamp
             });
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterFunc<T1, T2, T3, TResult>(this IRpcHandler self, string procId, Func<T1, T2, T3, TResult> func)
         {
             self.RegisterRpcAction(procId, args =>
@@ -151,6 +178,9 @@ namespace NWamp
             });
         }
 
+        /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
         public static void RegisterFunc<T1, T2, T3, T4, TResult>(this IRpcHandler self, string procId, Func<T1, T2, T3, T4, TResult> func)
         {
             self.RegisterRpcAction(procId, args =>

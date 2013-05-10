@@ -1,14 +1,19 @@
-using System;
-using System.Reflection;
-using System.Diagnostics;
 namespace NWamp
 {
+    using System;
+    using System.Reflection;
+    using System.Diagnostics;
+
     /// <summary>
     /// Basic configuration informations.
     /// </summary>
     public static class WampConfiguration
     {
+        /// <summary>
+        /// Version number of NWAMP library used. This should be visible to client connections.
+        /// </summary>
         private static readonly Version version;
+
         static WampConfiguration()
         {
             var asm = Assembly.GetExecutingAssembly();
@@ -17,7 +22,7 @@ namespace NWamp
         }
 
         /// <summary>
-        /// WAMP protocol implementation info.
+        /// Gets WAMP protocol implementation info.
         /// </summary>
         public static string Implementation
         {
@@ -28,7 +33,7 @@ namespace NWamp
         }
 
         /// <summary>
-        /// NWamp framework version (based on assembly).
+        /// Gets NWamp framework version (based on assembly).
         /// </summary>
         public static Version Version
         {
@@ -39,7 +44,7 @@ namespace NWamp
         }
 
         /// <summary>
-        /// Implemented WAMP protocol version.
+        /// Gets Implemented WAMP protocol version.
         /// </summary>
         public static int ProtocolVersion { get { return 1; } }
     }
