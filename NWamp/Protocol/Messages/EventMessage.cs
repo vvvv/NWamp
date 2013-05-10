@@ -1,18 +1,19 @@
-using NWamp.Protocol.Events;
 namespace NWamp.Protocol.Messages
 {
+    using NWamp.Protocol.Events;
+
     /// <summary>
     /// Event message send on publisher's request by server to all topic subscribers.
     /// </summary>
     public struct EventMessage : IWampMessage
     {
         /// <summary>
-        /// URI or CURIE used to identify events published on target topic.
+        /// Gets or sets URI or CURIE used to identify events published on target topic.
         /// </summary>
         public string TopicUri { get; set; }
 
         /// <summary>
-        /// Object send by publisher to all subscribers.
+        /// Gets or sets object send by publisher to all subscribers.
         /// </summary>
         public object Event { get; set; }
 
@@ -68,7 +69,7 @@ namespace NWamp.Protocol.Messages
         }
 
         /// <summary>
-        /// Type of WAMP message frame: 8.
+        /// Gets or sets type of WAMP message frame: 8.
         /// </summary>
         public MessageTypes Type
         {

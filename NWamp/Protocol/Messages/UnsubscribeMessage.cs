@@ -6,7 +6,7 @@ namespace NWamp.Protocol.Messages
     public struct UnsubscribeMessage : IWampMessage
     {
         /// <summary>
-        /// URI or CURIE used to identify events published on target topic.
+        /// Gets or sets URI or CURIE used to identify events published on target topic.
         /// </summary>
         public string TopicUri { get; set; }
 
@@ -57,7 +57,7 @@ namespace NWamp.Protocol.Messages
         }
 
         /// <summary>
-        /// Type of WAMP message frame: 6.
+        /// Gets or sets Type of WAMP message frame: 6.
         /// </summary>
         public MessageTypes Type
         {

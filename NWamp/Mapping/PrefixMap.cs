@@ -1,9 +1,9 @@
-using System.Collections.Specialized;
-using System.Collections.Generic;
-using System;
-
 namespace NWamp.Mapping
 {
+    using System.Collections.Specialized;
+    using System.Collections.Generic;
+    using System;
+
     /// <summary>
     /// Class used to store prefix (CURIE->URI) mappings.
     /// </summary>
@@ -11,21 +11,21 @@ namespace NWamp.Mapping
     {
         private readonly StringDictionary mappings;
 
-        private string _defaultUri;
+        private string defaultUri;
 
         /// <summary>
-        /// Default uri returned when no requested prefix match.
+        /// Gets or sets efault uri returned when no requested prefix match.
         /// Available only when FaultTolerant is set to true.
         /// </summary>
         public string DefaultUri
         {
-            get { return _defaultUri; }
+            get { return defaultUri; }
             set
             {
                 if (!Uri.IsWellFormedUriString(value, UriKind.RelativeOrAbsolute))
                     throw new UriFormatException("Uri parameter is not well formed uri string");
 
-                _defaultUri = value;
+                defaultUri = value;
             }
         }
 

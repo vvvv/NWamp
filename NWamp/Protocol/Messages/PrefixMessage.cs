@@ -8,12 +8,12 @@ namespace NWamp.Protocol.Messages
     public struct PrefixMessage : IWampMessage
     {
         /// <summary>
-        /// Prefix of the CURIE notation.
+        /// Gets or sets prefix of the CURIE notation.
         /// </summary>
         public string Prefix { get; set; }
 
         /// <summary>
-        /// Uri associated with target prefix.
+        /// Gets or sets URI associated with target prefix.
         /// </summary>
         public string Uri { get; set; }
 
@@ -73,7 +73,7 @@ namespace NWamp.Protocol.Messages
         }
 
         /// <summary>
-        /// Type of WAMP message frame: 1.
+        /// Gets or sets type of WAMP message frame: 1.
         /// </summary>
         public MessageTypes Type
         {

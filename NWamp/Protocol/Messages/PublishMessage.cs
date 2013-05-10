@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
-
 namespace NWamp.Protocol.Messages
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
     /// <summary>
     /// Event send by client to all clients connected to server who have subscribed
     /// to specific topic.
@@ -10,17 +10,17 @@ namespace NWamp.Protocol.Messages
     public struct PublishMessage : IWampMessage
     {
         /// <summary>
-        /// URI or CURIE used to identify events published on target topic.
+        /// Gets or sets URI or CURIE used to identify events published on target topic.
         /// </summary>
         public string TopicUri { get; set; }
 
         /// <summary>
-        /// Object send by publisher to all subscribers.
+        /// Gets or sets object send by publisher to all subscribers.
         /// </summary>
         public object Event { get; set; }
 
         /// <summary>
-        /// Value determining if event publisher should be excluded from receiving an event.
+        /// Gets or sets value determining if event publisher should be excluded from receiving an event.
         /// </summary>
         public bool ExcludeMe { get; set; }
 
@@ -31,7 +31,7 @@ namespace NWamp.Protocol.Messages
         public IList<string> Excludes { get; set; }
 
         /// <summary>
-        /// Set of client identifiers used to inform server, which subscribers 
+        /// Gets or sets collection of client identifiers used to inform server, which subscribers 
         /// are eligible to receive an event.
         /// </summary>
         public IList<string> Eligibles { get; set; }
@@ -150,7 +150,7 @@ namespace NWamp.Protocol.Messages
         }
 
         /// <summary>
-        /// Type of WAMP message frame: 7.
+        /// Gets or sets type of WAMP message frame: 7.
         /// </summary>
         public MessageTypes Type
         {

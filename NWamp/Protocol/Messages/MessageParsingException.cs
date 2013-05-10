@@ -8,12 +8,12 @@ namespace NWamp.Protocol.Messages
     public class MessageParsingException : WampException
     {
         /// <summary>
-        /// Original JSON array of parsed values received from WAMP message.
+        /// Gets or sets original JSON array of parsed values received from WAMP message.
         /// </summary>
         public object[] JsonArray { get; set; }
         
         /// <summary>
-        /// Expected (optional) WAMP message type.
+        /// Gets or sets expected (optional) WAMP message type.
         /// </summary>
         public MessageTypes? ExpectedType { get; set; }
 

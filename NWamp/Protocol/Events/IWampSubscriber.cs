@@ -1,7 +1,8 @@
-using System.Collections.Generic;
-using NWamp.Transport;
 namespace NWamp.Protocol.Events
 {
+    using System.Collections.Generic;
+    using NWamp.Transport;
+
     /// <summary>
     /// Interface used for handling WAMP Pub/Sub messages.
     /// </summary>
@@ -10,15 +11,11 @@ namespace NWamp.Protocol.Events
         /// <summary>
         /// Subscribes target WAMP connection to topic provided.
         /// </summary>
-        /// <param name="topicId"></param>
-        /// <param name="connection"></param>
         void Subscribe(string topicId, IWampConnection connection);
 
         /// <summary>
         /// Unsubscribes target WAMP connection from target topic.
         /// </summary>
-        /// <param name="topicId"></param>
-        /// <param name="connection"></param>
         void Unsubscribe(string topicId, IWampConnection connection);
 
         /// <summary>

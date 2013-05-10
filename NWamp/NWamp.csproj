@@ -52,7 +52,6 @@
     <Compile Include="Protocol\Events\PubSubEventArgs.cs" />
     <Compile Include="Protocol\Messages\UnhandledMessageException.cs" />
     <Compile Include="Protocol\Rpc\CallErrorException.cs" />
-    <Compile Include="Protocol\Rpc\ICallable.cs" />
     <Compile Include="Protocol\Rpc\IRpcHandler.cs" />
     <Compile Include="Protocol\Rpc\RpcEventArgs.cs" />
     <Compile Include="RpcExtensions.cs" />

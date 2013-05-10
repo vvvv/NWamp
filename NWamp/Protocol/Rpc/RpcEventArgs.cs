@@ -1,35 +1,35 @@
-﻿using System;
-
-namespace NWamp.Protocol.Rpc
+﻿namespace NWamp.Protocol.Rpc
 {
+    using System;
+
     /// <summary>
-    /// Event args used in RPC calls event handling.
+    /// Event args class used in RPC calls event handling.
     /// </summary>
     public class RpcEventArgs: EventArgs
     {
         /// <summary>
-        /// Call identifier associated with current event.
+        /// Gets or sets call identifier associated with current event.
         /// </summary>
         public string CallId { get; set; }
 
         /// <summary>
-        /// Procedure URI of current RPC call.
+        /// Gets or sets procedure URI identifier of current RPC call.
         /// </summary>
         public string ProcUri { get; set; }
 
         /// <summary>
-        /// Session identifier of RPC caller.
+        /// Gets or sets session identifier of RPC caller.
         /// </summary>
         public string SessionId { get; set; }
 
         /// <summary>
-        /// Determines if current RPC action has ended succesfully.
+        /// Gets or sets value, which determines if current RPC action has ended succesfully.
         /// If action is still pending, this value is null.
         /// </summary>
         public bool? IsSuccess { get; set; }
 
         /// <summary>
-        /// Gets optional exception, if any has occurred during RPC action execution.
+        /// Gets or sets optional exception, if any has occurred during RPC action execution.
         /// </summary>
         public Exception Error { get; set; }
 
@@ -37,9 +37,6 @@ namespace NWamp.Protocol.Rpc
         /// Creates new instance of <see cref="RpcEventArgs"/> class. 
         /// Use this construction to signalize call events, that have not yet ended.
         /// </summary>
-        /// <param name="callId"></param>
-        /// <param name="procUri"></param>
-        /// <param name="sessionId"></param>
         public RpcEventArgs(string callId, string procUri, string sessionId)
         {
             this.CallId = callId;
@@ -51,10 +48,6 @@ namespace NWamp.Protocol.Rpc
         /// Creates new instance of <see cref="RpcEventArgs"/> class. 
         /// Use this construction to signalize call events, that have ended already.
         /// </summary>
-        /// <param name="callId"></param>
-        /// <param name="procUri"></param>
-        /// <param name="sessionId"></param>
-        /// <param name="exc"></param>
         public RpcEventArgs(string callId, string procUri, string sessionId, Exception exc) : this(callId, procUri, sessionId)
         {
             this.IsSuccess = exc == null;

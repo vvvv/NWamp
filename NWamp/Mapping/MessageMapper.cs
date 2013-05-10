@@ -1,14 +1,17 @@
-using NWamp.Protocol.Messages;
-using System.Collections.Generic;
-using System;
-
 namespace NWamp.Mapping
 {
+    using NWamp.Protocol.Messages;
+    using System.Collections.Generic;
+    using System;
+
     /// <summary>
     /// Class used to map JSON arrays into WAMP messages.
     /// </summary>
     public class MessageMapper
     {
+        /// <summary>
+        /// Factory-typed dictionary used to map WAMP serialized JSON into specific message frame objects.
+        /// </summary>
         private static readonly IDictionary<MessageTypes, Func<object[], IWampMessage>> dictionary =
             new Dictionary <MessageTypes, Func<object[], IWampMessage>>
             {
@@ -27,8 +30,10 @@ namespace NWamp.Mapping
         {
             var a = (int)array[0];
             var type = (MessageTypes) a;
-            return dictionary.ContainsKey(type)
-                       ? dictionary[type](array)
+            Func<object[], IWampMessage> factoryMethod;
+
+            return dictionary.TryGetValue(type, out factoryMethod)
+                       ? factoryMethod(array)
                        : default(IWampMessage);
         }
     }

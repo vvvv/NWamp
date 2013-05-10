@@ -1,31 +1,30 @@
-using System;
-using System.Collections;
-using System.Linq;
-
 namespace NWamp.Protocol.Rpc
 {
+    using System;
+    using System.Collections;
+
     /// <summary>
-    /// Call error exception thrown when an exception occurred in RPC action.
+    /// Call error exception thrown when an exception occurred durring processing RPC action.
     /// </summary>
     public class CallErrorException : WampException
     {
         /// <summary>
-        /// RPC call identifier.
+        /// Gets or sets a RPC call identifier.
         /// </summary>
         public string CallId { get; set; }
 
         /// <summary>
-        /// URI or CURIE identifing an error.
+        /// Gets or sets URI or CURIE identifing an error.
         /// </summary>
         public string ErrorUri { get; set; }
 
         /// <summary>
-        /// Error description.
+        /// Gets or sets error description.
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// Optional details associated with error.
+        /// Gets or sets optional details associated with error.
         /// </summary>
         public object[] Details { get; set; }
 
@@ -52,7 +51,5 @@ namespace NWamp.Protocol.Rpc
             this.Description = errorDesc;
             this.Details = details;
         }
-
-        
     }
 }
