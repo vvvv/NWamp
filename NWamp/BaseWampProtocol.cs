@@ -13,19 +13,25 @@ namespace NWamp
         private Random rand;
 
         /// <summary>
-        /// Serializer used for serializing WAMP messages into valid JSON objects and vice versa.
+        /// Gets or sets delegate used for deserializing WAMP message frames.
         /// </summary>
-        public IJsonSerializer Serializer { get; set; }
+        public Func<string, object> DeserializeMessageFrame { get; set; }
+
+        /// <summary>
+        /// Gets or sets delegate used for serializing WAMP message frames.
+        /// </summary>
+        public Func<object, string> SerializeMessageFrame { get; set; }
 
         protected BaseWampProtocol()
-            : this(new DefaultJsonSerializer())
         {
+            this.rand = new Random();
         }
 
-        protected BaseWampProtocol(IJsonSerializer serializer)
+        protected BaseWampProtocol(Func<object, string> serializer, Func<string, object> deserializer)
         {
-            this.Serializer = serializer;
             this.rand = new Random();
+            this.DeserializeMessageFrame = deserializer;
+            this.SerializeMessageFrame = serializer;
         }
 
         /// <summary>
@@ -52,7 +58,7 @@ namespace NWamp
         /// <returns></returns>
         protected string SerializeMessage(IWampMessage message)
         {
-            var json = this.Serializer.SerializeArray(message.ToArray());
+            var json = this.SerializeMessageFrame(message.ToArray());
             return json;
         }
     }

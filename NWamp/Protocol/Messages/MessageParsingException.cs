@@ -10,7 +10,7 @@ namespace NWamp.Protocol.Messages
         /// <summary>
         /// Gets or sets original JSON array of parsed values received from WAMP message.
         /// </summary>
-        public object[] JsonArray { get; set; }
+        public object Object { get; set; }
         
         /// <summary>
         /// Gets or sets expected (optional) WAMP message type.
@@ -21,15 +21,15 @@ namespace NWamp.Protocol.Messages
         {
         }
 
-        public MessageParsingException(string message, object[] jsonArray) : base(message)
+        public MessageParsingException(string message, object jsonObject) : base(message)
         {
-            this.JsonArray = jsonArray;
+            this.Object = jsonObject;
         }
 
-        public MessageParsingException(string message, object[] jsonArray, MessageTypes expected):
+        public MessageParsingException(string message, object jsonObject, MessageTypes expected) :
             base(message)
         {
-            this.JsonArray = jsonArray;
+            this.Object = jsonObject;
             this.ExpectedType = expected;
         }
     }

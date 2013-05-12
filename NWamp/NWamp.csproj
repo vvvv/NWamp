@@ -43,10 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseWampProtocol.cs" />
-    <Compile Include="DefaultJsonSerializer.cs" />
     <Compile Include="Mapping\PrefixMap.cs" />
     <Compile Include="Mapping\WampPrefixException.cs" />
-    <Compile Include="IJsonSerializer.cs" />
     <Compile Include="Mapping\MessageMapper.cs" />
     <Compile Include="Protocol\Events\IWampSubscriber.cs" />
     <Compile Include="Protocol\Events\PubSubEventArgs.cs" />

@@ -100,17 +100,22 @@ namespace NWamp
         /// <summary>
         /// Create new instance of <see cref="WampListener"/>.
         /// </summary>
-        public WampListener()
-            : this(new DefaultJsonSerializer())
+        public WampListener() 
+            : base()
         {
+            this.connections = new Dictionary<string, IWampConnection>();
+            this.topics = new Dictionary<string, HashSet<string>>();
+            this.procedures = new Dictionary<string, Func<object[], object>>();
+            this.calls = new ConcurrentDictionary<string, Task>();
         }
 
         /// <summary>
         /// Create new instance of <see cref="WampListener"/>.
         /// </summary>
-        /// <param name="serializer">Implementation of JSON serializer used for data parsing/serialization.</param>
-        public WampListener(IJsonSerializer serializer) 
-            : base(serializer)
+        /// <param name="serializer">Custom JSON serialization method.</param>
+        /// <param name="deserializer">Custom JSON deserialization method.</param>
+        public WampListener(Func<object, string> serializer, Func<string, object> deserializer)
+            : base(serializer, deserializer)
         {
             this.connections = new Dictionary<string, IWampConnection>();
             this.topics = new Dictionary<string, HashSet<string>>();
@@ -164,10 +169,17 @@ namespace NWamp
         /// <param name="connection">Reference to web socket connection, which sent a message.</param>
         public virtual void OnReceived(string json, IWampConnection connection)
         {
-            var array = this.Serializer.DeserializeArray(json);
-            var msg = MessageMapper.Get(array);
+            var array = this.DeserializeMessageFrame(json);
+            if (array is object[])
+            {
+                var msg = MessageMapper.Get(array as object[]);
 
-            this.OnMessageReceived(msg, connection);
+                this.OnMessageReceived(msg, connection);
+            }
+            else
+            {
+                throw new MessageParsingException("Couldn't parse received WAMP message frame", array);
+            }
         }
 
         #region Message responding
@@ -258,7 +270,7 @@ namespace NWamp
 
                     var result = this.Call(callId, procUri, args.ToArray());
                     var callResponse = new CallResultMessage(callId, result);
-                    var json = this.Serializer.SerializeArray(callResponse.ToArray());
+                    var json = this.SerializeMessageFrame(callResponse.ToArray());
                     connection.SendMessage(json);
                 }
                 catch (CallErrorException exc)  
@@ -271,7 +283,7 @@ namespace NWamp
                                        : exc.ErrorUri;
 
                     var callError = new CallErrorMessage(exc.CallId, errorUri, exc.Description, exc.Details);
-                    var json = this.Serializer.SerializeArray(callError.ToArray());
+                    var json = this.SerializeMessageFrame(callError.ToArray());
                     connection.SendMessage(json);
                 }
                 catch (Exception exc)
@@ -440,7 +452,7 @@ namespace NWamp
         public void Publish(string topicId, string senderSession, object evt, IEnumerable<string> eligible, IEnumerable<string> excludes, bool excludeMe)
         {
             var msg = new EventMessage(topicId, evt);
-            var json = this.Serializer.SerializeArray(msg.ToArray());
+            var json = this.SerializeMessageFrame(msg.ToArray());
             var receivers = GetEventReceivers(this.topics[topicId], senderSession, eligible, excludes, excludeMe);
 
             Parallel.ForEach(receivers, receiver =>

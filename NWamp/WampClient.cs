@@ -6,6 +6,7 @@ namespace NWamp
     using NWamp.Mapping;
     using NWamp.Transport;
     using NWamp.Protocol.Messages;
+using System;
 
     /// <summary>
     /// Client-side WAMP protocol implementation. Derive from this class to create working 
@@ -53,11 +54,10 @@ namespace NWamp
 
         /// <summary>
         /// Creates new instance of <see cref="WampClient"/> class.
-        /// By default all messages are serialized to JSON using default .NET serializer.
         /// </summary>
         /// <param name="socket">Interface used to access implementation-specific web socket library.</param>
-        public WampClient(IWebSocket socket)
-            : this(socket, new DefaultJsonSerializer())
+        /// <param name="serializer">Custom JSON serializer.</param>
+        public WampClient(IWebSocket socket) : this(socket, null, null)
         {
         }
 
@@ -65,8 +65,10 @@ namespace NWamp
         /// Creates new instance of <see cref="WampClient"/> class.
         /// </summary>
         /// <param name="socket">Interface used to access implementation-specific web socket library.</param>
-        /// <param name="serializer">Custom JSON serializer.</param>
-        public WampClient(IWebSocket socket, IJsonSerializer serializer) : base(serializer)
+        /// <param name="serializer">Custom JSON serialization method.</param>
+        /// <param name="deserializer">Custom JSON deserialization method.</param>
+        public WampClient(IWebSocket socket, Func<object, string> serializer, Func<string, object> deserializer)
+            : base(serializer, deserializer)
         {
             this.Socket = socket;
             this.calls = new List<string>();
@@ -101,7 +103,7 @@ namespace NWamp
         public void Subscribe(string topicId)
         {
             var subMsg = new SubscribeMessage(topicId);
-            var json = this.Serializer.SerializeArray(subMsg.ToArray());
+            var json = this.SerializeMessageFrame(subMsg.ToArray());
             this.Socket.SendMessage(json);
 
             this.topics.Add(topicId);
