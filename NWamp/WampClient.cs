@@ -67,7 +67,7 @@ using System;
         /// <param name="socket">Interface used to access implementation-specific web socket library.</param>
         /// <param name="serializer">Custom JSON serialization method.</param>
         /// <param name="deserializer">Custom JSON deserialization method.</param>
-        public WampClient(IWebSocket socket, Func<object, string> serializer, Func<string, object> deserializer)
+        public WampClient(IWebSocket socket, Func<object[], string> serializer, Func<string, object[]> deserializer)
             : base(serializer, deserializer)
         {
             this.Socket = socket;

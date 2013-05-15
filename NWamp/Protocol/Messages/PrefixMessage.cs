@@ -65,7 +65,7 @@ namespace NWamp.Protocol.Messages
         {
             if (array.Length < 3)
                 throw new MessageParsingException("Wrong number of array arguments", array);
-            if (this.Type != (MessageTypes)(int)array[0])
+            if (this.Type != (MessageTypes)array[0])
                 throw new MessageParsingException("Invalid array message type argument passed", array, this.Type);
 
             this.Prefix = (string)array[1];

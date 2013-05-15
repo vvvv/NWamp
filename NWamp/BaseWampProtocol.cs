@@ -15,19 +15,19 @@ namespace NWamp
         /// <summary>
         /// Gets or sets delegate used for deserializing WAMP message frames.
         /// </summary>
-        public Func<string, object> DeserializeMessageFrame { get; set; }
+        public Func<string, object[]> DeserializeMessageFrame { get; set; }
 
         /// <summary>
         /// Gets or sets delegate used for serializing WAMP message frames.
         /// </summary>
-        public Func<object, string> SerializeMessageFrame { get; set; }
+        public Func<object[], string> SerializeMessageFrame { get; set; }
 
         protected BaseWampProtocol()
         {
             this.rand = new Random();
         }
 
-        protected BaseWampProtocol(Func<object, string> serializer, Func<string, object> deserializer)
+        protected BaseWampProtocol(Func<object[], string> serializer, Func<string, object[]> deserializer)
         {
             this.rand = new Random();
             this.DeserializeMessageFrame = deserializer;

@@ -114,7 +114,7 @@ namespace NWamp
         /// </summary>
         /// <param name="serializer">Custom JSON serialization method.</param>
         /// <param name="deserializer">Custom JSON deserialization method.</param>
-        public WampListener(Func<object, string> serializer, Func<string, object> deserializer)
+        public WampListener(Func<object[], string> serializer, Func<string, object[]> deserializer)
             : base(serializer, deserializer)
         {
             this.connections = new Dictionary<string, IWampConnection>();
@@ -169,10 +169,10 @@ namespace NWamp
         /// <param name="connection">Reference to web socket connection, which sent a message.</param>
         public virtual void OnReceived(string json, IWampConnection connection)
         {
-            var array = this.DeserializeMessageFrame(json);
-            if (array is object[])
+            var array = this.DeserializeMessageFrame(json) as object[];
+            if (array != null)
             {
-                var msg = MessageMapper.Get(array as object[]);
+                var msg = MessageMapper.Get(array);
 
                 this.OnMessageReceived(msg, connection);
             }

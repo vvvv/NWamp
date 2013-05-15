@@ -28,8 +28,8 @@ namespace NWamp.Mapping
 
         public static IWampMessage Get(object[] array)
         {
-            var a = (int)array[0];
-            var type = (MessageTypes) a;
+            array[0] = Convert.ToInt32(array[0]);
+            var type = (MessageTypes)array[0];
             Func<object[], IWampMessage> factoryMethod;
 
             return dictionary.TryGetValue(type, out factoryMethod)
