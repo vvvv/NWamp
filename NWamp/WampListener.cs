@@ -10,6 +10,7 @@ namespace NWamp
     using NWamp.Protocol.Messages;
     using NWamp.Protocol.Rpc;
     using NWamp.Transport;
+    using System.Threading;
 
     /// <summary>
     /// Server-side listener using WAMP protocol. Derive from this class to create working 
@@ -81,26 +82,61 @@ namespace NWamp
         public event SessionEventHandler SessionClosed;
 
         /// <summary>
-        /// Event fired, when new event has been published.
+        /// Event raised, before new event will be published among topic subscribers.
         /// </summary>
-        public event PubSubEventHandler EventPublished;
+        public event PublishingEventHandler EventPublishing;
+
+        /// <summary>
+        /// Event raised, after new event will be published among topic subscribers.
+        /// </summary>
+        public event PublishedEventHandler EventPublished;
+
+        /// <summary>
+        /// Event fired, when new topic has been created.
+        /// </summary>
+        public event TopicCreatedEventHandler TopicCreated;
+
+        /// <summary>
+        /// Event fired, before new topic will be created.
+        /// </summary>
+        public event TopicCreatingEventHandler TopicCreating;
+
+        /// <summary>
+        /// Event fired, after topic has been removed.
+        /// </summary>
+        public event TopicRemovedEventHandler TopicRemoved;
+
+        /// <summary>
+        /// Event fired, before new connection will be subscribed.
+        /// </summary>
+        public event ConnectionSubscribingEventHandler ConnectionSubscribing;
+
+        /// <summary>
+        /// Event fired, after new connection has been subscribed.
+        /// </summary>
+        public event ConnectionSubscribedEventHandler ConnectionSubscribed;
+
+        /// <summary>
+        /// Event fired, when existing connection has been unsubscribed.
+        /// </summary>
+        public event ConnectionUnsubscribedEventHandler ConnectionUnsubscribed;
 
         /// <summary>
         /// Event raised when new RPC call has been received and started to work.
         /// </summary>
-        public event RpcEventHandler CallInvoking;
+        public event CallInvokingEventHandler CallInvoking;
 
         /// <summary>
         /// Event raised when existing RPC call has ended.
         /// </summary>
-        public event RpcEventHandler CallInvoked;
+        public event CallInvokedEventHandler CallInvoked;
 
         #endregion
 
         /// <summary>
         /// Create new instance of <see cref="WampListener"/>.
         /// </summary>
-        public WampListener() 
+        public WampListener()
             : base()
         {
             this.connections = new Dictionary<string, IWampConnection>();
@@ -135,7 +171,7 @@ namespace NWamp
             connection.SessionId = sessionId;
             this.connections.Add(sessionId, connection);
 
-            var welcome = new WelcomeMessage(sessionId, 
+            var welcome = new WelcomeMessage(sessionId,
                 WampConfiguration.ProtocolVersion,
                 WampConfiguration.Implementation);
 
@@ -254,6 +290,7 @@ namespace NWamp
         /// </summary>
         protected void OnCallMessage(CallMessage message, IWampConnection connection)
         {
+            var tokenSource = new CancellationTokenSource();
             var callTask = Task.Factory.StartNew(obj =>
             {
                 var a = obj as object[];
@@ -273,7 +310,7 @@ namespace NWamp
                     var json = this.SerializeMessageFrame(callResponse.ToArray());
                     connection.SendMessage(json);
                 }
-                catch (CallErrorException exc)  
+                catch (CallErrorException exc)
                 {
                     // we can react on inner RPC procedures exception if they are thrown as CallErrorExceptions
                     // in that case, send call error message frame
@@ -297,19 +334,28 @@ namespace NWamp
                     this.calls.TryRemove(callId, out t);    // try to remove method call handler
 
                     // fire event on call finished
-                    if (this.CallInvoked != null)   
+                    if (this.CallInvoked != null)
                         this.CallInvoked(this,
-                            new RpcEventArgs(callId, procUri, conn.SessionId, exception));
+                            new CallInvokedEventArgs(callId, procUri, conn.SessionId, exception));
                 }
-            }, new object[] { message.CallId, message.ProcUri, message.Arguments, connection });
+            }, new object[] { message.CallId, message.ProcUri, message.Arguments, connection }, tokenSource.Token);
 
             // try to add method call handler
             this.calls.TryAdd(message.CallId, callTask);
 
             // fire event on call started
-            if(this.CallInvoking != null)
-                this.CallInvoking(this, new RpcEventArgs(message.CallId, 
-                    connection.Prefixes.Map(message.ProcUri), connection.SessionId));
+            if (this.CallInvoking != null)
+            {
+                var invokingEvt = new CallInvokingEventArgs(message.CallId,
+                        connection.Prefixes.Map(message.ProcUri), connection.SessionId);
+                
+                this.CallInvoking(this, invokingEvt);
+
+                if (invokingEvt.Cancel)
+                {
+                    tokenSource.Cancel();
+                }
+            }
         }
 
         /// <summary>
@@ -382,12 +428,23 @@ namespace NWamp
         /// flag is set on True or <paramref name="force"/> argument is set.
         /// </summary>
         /// <returns>True if new topic has been created, false otherwise.</returns>
-        public bool CreateTopic(string topicId, bool force = false)
+        public virtual bool CreateTopic(string topicId, bool force = false)
         {
             if (!this.topics.ContainsKey(topicId) && (this.FixedTopics || force))
             {
-                this.topics.Add(topicId, new HashSet<string>());
-                return true;
+                var evt = new TopicCreatingEventArgs(topicId);
+                if (this.TopicCreating != null)
+                    this.TopicCreating(this, evt);
+
+                if (!evt.Cancel)
+                {
+                    this.topics.Add(topicId, new HashSet<string>());
+
+                    if (this.TopicCreated != null)
+                        this.TopicCreated(this, new TopicCreatedEventArgs(topicId));
+
+                    return true;
+                }
             }
             return false;
         }
@@ -398,12 +455,16 @@ namespace NWamp
         /// flag is set on True or <paramref name="force"/> argument is set.
         /// </summary>
         /// <returns>True if topic has been removed successfully, false otherwise.</returns>
-        public bool RemoveTopic(string topicId, bool force = false)
+        public virtual bool RemoveTopic(string topicId, bool force = false)
         {
             if (this.topics.ContainsKey(topicId) && (this.FixedTopics || force))
             {
                 this.topics[topicId].Clear();
                 this.topics.Remove(topicId);
+
+                if (this.TopicRemoved != null)
+                    this.TopicRemoved(this, new TopicRemovedEventArgs(topicId));
+
                 return true;
             }
             return false;
@@ -415,10 +476,27 @@ namespace NWamp
         /// </summary>
         public void Subscribe(string topicId, IWampConnection connection)
         {
-            if (this.topics.ContainsKey(topicId))
-                this.topics[topicId].Add(connection.SessionId);
-            else if(!this.FixedTopics)
-                this.topics.Add(topicId, new HashSet<string>(new[] {connection.SessionId}));
+            HashSet<string> subscribers;
+            if (this.topics.TryGetValue(topicId, out subscribers) || !this.FixedTopics)
+            {
+                if (subscribers == null)
+                {
+                    subscribers = new HashSet<string>();
+                    this.topics.Add(topicId, subscribers);
+                }
+
+                var evt = new ConnectionSubscribingEventArgs(topicId, connection.SessionId);
+                if (this.ConnectionSubscribing != null)
+                    this.ConnectionSubscribing(this, evt);
+
+                if (!evt.Cancel)
+                {
+                    subscribers.Add(connection.SessionId);
+
+                    if (this.ConnectionSubscribed != null)
+                        this.ConnectionSubscribed(this, new ConnectionSubscribedEventArgs(topicId, connection.SessionId));
+                }
+            }
         }
 
         /// <summary>
@@ -431,7 +509,12 @@ namespace NWamp
             {
                 this.topics[topicId].Remove(connection.SessionId);
                 if (this.topics[topicId].Count == 0 && !this.FixedTopics)
+                {
                     this.topics.Remove(topicId);
+
+                    if (this.ConnectionUnsubscribed != null)
+                        this.ConnectionUnsubscribed(this, new ConnectionUnsubscribedEventArgs(topicId, connection.SessionId));
+                }
             }
         }
 
@@ -455,17 +538,26 @@ namespace NWamp
             var json = this.SerializeMessageFrame(msg.ToArray());
             var receivers = GetEventReceivers(this.topics[topicId], senderSession, eligible, excludes, excludeMe);
 
+            var publishingEvt = new PublishingEventArgs(topicId, senderSession, receivers);
+            if (this.EventPublishing != null)
+            {
+                this.EventPublishing(this, publishingEvt);
+                receivers = publishingEvt.ReceiversSessions;
+            }
+
+            var succeeded = new ConcurrentQueue<string>();
             Parallel.ForEach(receivers, receiver =>
             {
                 IWampConnection connection;
-                if(this.connections.TryGetValue(receiver, out connection))
+                if (this.connections.TryGetValue(receiver, out connection))
                 {
                     connection.SendMessage(json);
+                    succeeded.Enqueue(receiver);
                 }
             });
 
-            if(this.EventPublished != null)
-                this.EventPublished(this, new PubSubEventArgs(topicId, senderSession, receivers));
+            if (this.EventPublished != null)
+                this.EventPublished(this, new PublishedEventArgs(topicId, senderSession, succeeded));
         }
 
         /// <summary>
@@ -488,7 +580,7 @@ namespace NWamp
             if (excludes != null && excludes.Any())
                 receivers = receivers.Except(excludes);
             if (excludeMe)
-                receivers = receivers.Except(new[] {senderSession});
+                receivers = receivers.Except(new[] { senderSession });
             return receivers;
         }
 

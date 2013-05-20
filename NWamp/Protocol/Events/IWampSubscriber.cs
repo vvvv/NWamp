@@ -9,6 +9,41 @@ namespace NWamp.Protocol.Events
     public interface IWampSubscriber
     {
         /// <summary>
+        /// Event rised after new topic has been created.
+        /// </summary>
+        event TopicCreatedEventHandler TopicCreated;
+
+        /// <summary>
+        /// Event rised before new topic will be created.
+        /// </summary>
+        event TopicCreatingEventHandler TopicCreating;
+
+        /// <summary>
+        /// Event rised before new connection has been subscribed.
+        /// </summary>
+        event ConnectionSubscribingEventHandler ConnectionSubscribing;
+
+        /// <summary>
+        /// Event rised after new connection has been subscribed.
+        /// </summary>
+        event ConnectionSubscribedEventHandler ConnectionSubscribed;
+
+        /// <summary>
+        /// Event rised after existing connection has unsubscribed.
+        /// </summary>
+        event ConnectionUnsubscribedEventHandler ConnectionUnsubscribed;
+
+        /// <summary>
+        /// Event rised before new event will be published among topic subscribers.
+        /// </summary>
+        event PublishingEventHandler EventPublishing;
+
+        /// <summary>
+        /// Event rised after new event will be published among topic subscribers.
+        /// </summary>
+        event PublishedEventHandler EventPublished;
+
+        /// <summary>
         /// Subscribes target WAMP connection to topic provided.
         /// </summary>
         void Subscribe(string topicId, IWampConnection connection);

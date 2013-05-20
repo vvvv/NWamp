@@ -9,6 +9,16 @@ namespace NWamp.Protocol.Rpc
     public interface IRpcHandler
     {
         /// <summary>
+        /// Event fired when RPC call has been invoked but not yet ended.
+        /// </summary>
+        event CallInvokingEventHandler CallInvoking;
+
+        /// <summary>
+        /// Event fired when RPC call has ended or failed.
+        /// </summary>
+        event CallInvokedEventHandler CallInvoked;
+
+        /// <summary>
         /// Performs RPC method call. This is a synchronous method.
         /// </summary>
         /// <param name="callId">Current call identifier.</param>

@@ -6,7 +6,7 @@ namespace NWamp.Protocol.Events
     /// <summary>
     /// Event arguments used in Publish/Subscribe message events.
     /// </summary>
-    public class PubSubEventArgs : EventArgs
+    public abstract class PubSubEventArgs : EventArgs
     {
         /// <summary>
         /// Gets or sets session identifier of message publisher.
@@ -19,18 +19,12 @@ namespace NWamp.Protocol.Events
         public string TopicId { get; set; }
 
         /// <summary>
-        /// Gets or sets list of event receivers sessions ids.
-        /// </summary>
-        public IEnumerable<string> Receivers { get; set; }
-
-        /// <summary>
         /// Creates new instance of <see cref="PubSubEventArgs"/> class.
         /// </summary>
-        public PubSubEventArgs(string topicId, string senderSessionId, IEnumerable<string> receivers)
+        protected PubSubEventArgs(string topicId, string sessionId)
         {
             this.TopicId = topicId;
-            this.SessionId = senderSessionId;
-            this.Receivers = receivers;
+            this.SessionId = sessionId;
         }
     }
 
