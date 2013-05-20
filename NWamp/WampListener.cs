@@ -291,54 +291,9 @@ namespace NWamp
         protected void OnCallMessage(CallMessage message, IWampConnection connection)
         {
             var tokenSource = new CancellationTokenSource();
-            var callTask = Task.Factory.StartNew(obj =>
-            {
-                var a = obj as object[];
-                var callId = (string)a[0];
-                var procId = (string)a[1];
-                var args = (IEnumerable<object>)a[2];
-                var conn = (IWampConnection)a[3];
-
-                Exception exception = null;
-                var procUri = conn.Prefixes.Map(procId);
-                try
-                {
-                    // try to invoke registered method and return call result message frame
-
-                    var result = this.Call(callId, procUri, args.ToArray());
-                    var callResponse = new CallResultMessage(callId, result);
-                    var json = this.SerializeMessageFrame(callResponse.ToArray());
-                    connection.SendMessage(json);
-                }
-                catch (CallErrorException exc)
-                {
-                    // we can react on inner RPC procedures exception if they are thrown as CallErrorExceptions
-                    // in that case, send call error message frame
-
-                    var errorUri = (conn.Prefixes.ContainsMapping(exc.ErrorUri))
-                                       ? conn.Prefixes.Map(exc.ErrorUri)
-                                       : exc.ErrorUri;
-
-                    var callError = new CallErrorMessage(exc.CallId, errorUri, exc.Description, exc.Details);
-                    var json = this.SerializeMessageFrame(callError.ToArray());
-                    connection.SendMessage(json);
-                }
-                catch (Exception exc)
-                {
-                    exception = exc;
-                    throw;
-                }
-                finally
-                {
-                    Task t;
-                    this.calls.TryRemove(callId, out t);    // try to remove method call handler
-
-                    // fire event on call finished
-                    if (this.CallInvoked != null)
-                        this.CallInvoked(this,
-                            new CallInvokedEventArgs(callId, procUri, conn.SessionId, exception));
-                }
-            }, new object[] { message.CallId, message.ProcUri, message.Arguments, connection }, tokenSource.Token);
+            var callTask = Task.Factory.StartNew(param => HandleCallRequest(param as CallParameters), 
+                new CallParameters(message.CallId, message.ProcUri, message.Arguments.ToArray(), connection), 
+                tokenSource.Token);
 
             // try to add method call handler
             this.calls.TryAdd(message.CallId, callTask);
@@ -355,6 +310,41 @@ namespace NWamp
                 {
                     tokenSource.Cancel();
                 }
+            }
+        }
+
+        protected virtual void HandleCallRequest(CallParameters parameters)
+        {
+            var callId = parameters.CallId;
+            var procId = parameters.ProcUri;
+            var args = parameters.Arguments;
+            var connection = parameters.Connection;
+
+            Exception exception = null;
+            var procUri = connection.Prefixes.Map(procId);
+            try
+            {
+                var result = this.Call(callId, procUri, args.ToArray());
+                HandleCallResponse(callId, connection, result);
+            }
+            catch (CallErrorException exc)
+            {
+                HandleCallError(connection, exc);
+            }
+            catch (Exception exc)
+            {
+                exception = exc;
+                throw;
+            }
+            finally
+            {
+                Task t;
+                this.calls.TryRemove(callId, out t);    // try to remove method call handler
+
+                // fire event on call finished
+                if (this.CallInvoked != null)
+                    this.CallInvoked(this,
+                        new CallInvokedEventArgs(callId, procUri, connection.SessionId, exception));
             }
         }
 
@@ -416,6 +406,24 @@ namespace NWamp
         {
             if (this.procedures.ContainsKey(procId))
                 this.procedures.Remove(procId);
+        }
+
+        private void HandleCallError(IWampConnection connection, CallErrorException exc)
+        {
+            var errorUri = (connection.Prefixes.ContainsMapping(exc.ErrorUri))
+                               ? connection.Prefixes.Map(exc.ErrorUri)
+                               : exc.ErrorUri;
+
+            var callError = new CallErrorMessage(exc.CallId, errorUri, exc.Description, exc.Details);
+            var json = this.SerializeMessageFrame(callError.ToArray());
+            connection.SendMessage(json);
+        }
+
+        private void HandleCallResponse(string callId, IWampConnection connection, object result)
+        {
+            var callResponse = new CallResultMessage(callId, result);
+            var json = this.SerializeMessageFrame(callResponse.ToArray());
+            connection.SendMessage(json);
         }
 
         #endregion

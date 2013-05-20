@@ -46,6 +46,7 @@
     <Compile Include="Mapping\PrefixMap.cs" />
     <Compile Include="Mapping\WampPrefixException.cs" />
     <Compile Include="Mapping\MessageMapper.cs" />
+    <Compile Include="Protocol\Rpc\CallParameters.cs" />
     <Compile Include="Protocol\Events\ConnectionSubscribedEventArgs.cs" />
     <Compile Include="Protocol\Events\ConnectionSubscribingEventArgs.cs" />
     <Compile Include="Protocol\Events\ConnectionUnsubscribedEventArgs.cs" />
