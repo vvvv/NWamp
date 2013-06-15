@@ -46,6 +46,6 @@ namespace NWamp
         /// <summary>
         /// Gets Implemented WAMP protocol version.
         /// </summary>
-        public static int ProtocolVersion { get { return 1; } }
+        public static double ProtocolVersion { get { return 1.0; } }
     }
 }
