@@ -14,7 +14,11 @@ NWamp
 
 Real life implementation could be found in NWamp.Alchemy project. Server side listener is represented by *AlchemyWampListener* class. Sample code could looks like this:
 
-	var listener = new AlchemyWampListener(IPAddress.Any, 9000, new JsonNetSerializer());
+	var listener = new AlchemyWampListener(			
+		IPAddress.Any, 								// listen on ip address
+		9000, 										// listening port
+		JsonConvert.SerializeObject,				// serialization delegate
+		JsonConvert.DeserializeObject<object[]>);	// deserialization delegate
 	listener.RegisterFunc<string,string>("http://localhost/example/hello#resp", x => "Hello, " + x);
     listener.Listen();
 	
