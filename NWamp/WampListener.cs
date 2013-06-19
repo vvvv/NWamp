@@ -28,7 +28,7 @@ namespace NWamp
         /// <summary>
         /// Map of topics and their subscribers sessions hashes.
         /// </summary>
-        protected readonly IDictionary<string, HashSet<string>> topics;
+        protected readonly IDictionary<string, Topic> topics;
 
         /// <summary>
         /// Map of procedures associated with RPC action calls. Procedures are just simple
@@ -40,7 +40,7 @@ namespace NWamp
         /// Func&lt;object[], object&gt; is a generalization. You may create specialized generic methods
         /// by using extension methods found in <see cref="RpcExtensions"/> class.
         /// </remarks>
-        protected readonly IDictionary<string, Func<object[], object>> procedures;
+        protected readonly IDictionary<string, ProcedureDefinition> procedures;
 
         /// <summary>
         /// List of RPC calls realized at the moment. Each RPC call is realized asynchronously
@@ -66,6 +66,13 @@ namespace NWamp
         /// can join to topics created before.
         /// </summary>
         public bool FixedTopics { get; set; }
+        
+        /// <summary>
+        /// Gets mapping function used for resolving proper type of parsed RPC request parameters.
+        /// 
+        /// Function: (object sourceObject, Type sourceType, Type destinationType) => object destinationObject.
+        /// </summary>
+        public Func<object, Type, Type, object> TypeResolver { get; set; }
 
         #endregion
 
@@ -140,9 +147,19 @@ namespace NWamp
             : base()
         {
             this.connections = new Dictionary<string, IWampConnection>();
-            this.topics = new Dictionary<string, HashSet<string>>();
-            this.procedures = new Dictionary<string, Func<object[], object>>();
+            this.topics = new Dictionary<string, Topic>();
+            this.procedures = new Dictionary<string, ProcedureDefinition>();
             this.calls = new ConcurrentDictionary<string, Task>();
+        }
+        
+        /// <summary>
+        /// Create new instance of <see cref="WampListener"/>.
+        /// </summary>
+        /// <param name="serializer">Custom JSON serialization method.</param>
+        /// <param name="deserializer">Custom JSON deserialization method.</param>
+        public WampListener(Func<object[], string> serializer, Func<string, object[]> deserializer)
+            : this(serializer, deserializer, (source, srcType, dstType) => source)
+        {
         }
 
         /// <summary>
@@ -150,12 +167,17 @@ namespace NWamp
         /// </summary>
         /// <param name="serializer">Custom JSON serialization method.</param>
         /// <param name="deserializer">Custom JSON deserialization method.</param>
-        public WampListener(Func<object[], string> serializer, Func<string, object[]> deserializer)
+        /// <param name="typeResolver">Custom type mapping function.</param>
+        public WampListener(
+            Func<object[], string> serializer, 
+            Func<string, object[]> deserializer,
+            Func<object, Type, Type, object> typeResolver)
             : base(serializer, deserializer)
         {
+            this.TypeResolver = typeResolver;
             this.connections = new Dictionary<string, IWampConnection>();
-            this.topics = new Dictionary<string, HashSet<string>>();
-            this.procedures = new Dictionary<string, Func<object[], object>>();
+            this.topics = new Dictionary<string, Topic>();
+            this.procedures = new Dictionary<string, ProcedureDefinition>();
             this.calls = new ConcurrentDictionary<string, Task>();
         }
 
@@ -291,7 +313,7 @@ namespace NWamp
         protected void OnCallMessage(CallMessage message, IWampConnection connection)
         {
             var tokenSource = new CancellationTokenSource();
-            var callTask = Task.Factory.StartNew(param => HandleCallRequest(param as CallParameters), 
+            var callTask = Task.Factory.StartNew(param => this.HandleCallRequest(param as CallParameters), 
                 new CallParameters(message.CallId, message.ProcUri, message.Arguments.ToArray(), connection), 
                 tokenSource.Token);
 
@@ -373,10 +395,10 @@ namespace NWamp
         /// </exception>
         public object Call(string callId, string procId, object[] args)
         {
-            Func<object[], object> func;
-            if (this.procedures.TryGetValue(procId, out func))
+            ProcedureDefinition definition;
+            if (this.procedures.TryGetValue(procId, out definition))
             {
-                return func(args);
+                return definition.Procedure(args);
             }
             else
             {
@@ -392,10 +414,11 @@ namespace NWamp
         /// <param name="handler">Method handler.</param>
         public void RegisterRpcAction(string procId, Func<object[], object> handler)
         {
+            var definition = new ProcedureDefinition(procId, handler);
             if (this.procedures.ContainsKey(procId))
-                this.procedures[procId] = handler;
+                this.procedures[procId] = definition;
             else
-                this.procedures.Add(procId, handler);
+                this.procedures.Add(procId, definition);
         }
 
         /// <summary>
@@ -446,7 +469,7 @@ namespace NWamp
 
                 if (!evt.Cancel)
                 {
-                    this.topics.Add(topicId, new HashSet<string>());
+                    this.topics.Add(topicId, new Topic(topicId));
 
                     if (this.TopicCreated != null)
                         this.TopicCreated(this, new TopicCreatedEventArgs(topicId));
@@ -467,7 +490,7 @@ namespace NWamp
         {
             if (this.topics.ContainsKey(topicId) && (this.FixedTopics || force))
             {
-                this.topics[topicId].Clear();
+                this.topics[topicId].Close();
                 this.topics.Remove(topicId);
 
                 if (this.TopicRemoved != null)
@@ -484,13 +507,13 @@ namespace NWamp
         /// </summary>
         public void Subscribe(string topicId, IWampConnection connection)
         {
-            HashSet<string> subscribers;
-            if (this.topics.TryGetValue(topicId, out subscribers) || !this.FixedTopics)
+            Topic topic;
+            if (this.topics.TryGetValue(topicId, out topic) || !this.FixedTopics)
             {
-                if (subscribers == null)
+                if (topic == null)
                 {
-                    subscribers = new HashSet<string>();
-                    this.topics.Add(topicId, subscribers);
+                    topic = new Topic(topicId);
+                    this.topics.Add(topicId, topic);
                 }
 
                 var evt = new ConnectionSubscribingEventArgs(topicId, connection.SessionId);
@@ -499,7 +522,7 @@ namespace NWamp
 
                 if (!evt.Cancel)
                 {
-                    subscribers.Add(connection.SessionId);
+                    topic.Subscribe(connection.SessionId);
 
                     if (this.ConnectionSubscribed != null)
                         this.ConnectionSubscribed(this, new ConnectionSubscribedEventArgs(topicId, connection.SessionId));
@@ -515,8 +538,8 @@ namespace NWamp
         {
             if (this.topics.ContainsKey(topicId))
             {
-                this.topics[topicId].Remove(connection.SessionId);
-                if (this.topics[topicId].Count == 0 && !this.FixedTopics)
+                this.topics[topicId].Unsubscribe(connection.SessionId);
+                if (this.topics[topicId].IsEmpty && !this.FixedTopics)
                 {
                     this.topics.Remove(topicId);
 
@@ -571,7 +594,7 @@ namespace NWamp
         /// <summary>
         /// Gets list of session identifiers for subscribers, which should receive an event message.
         /// </summary>
-        /// <param name="topicSubscribers">Default list of all topic subscribers.</param>
+        /// <param name="topic">Topic object representation.</param>
         /// <param name="senderSession">Event emitter (sender's session id).</param>
         /// <param name="eligible">
         /// List of eligible receivers. If any, then excludes and exclude me will be ignored.
@@ -579,11 +602,11 @@ namespace NWamp
         /// <param name="excludes">List of excluded connections sessions ids.</param>
         /// <param name="excludeMe">Should sender be excluded as message receiver?</param>
         /// <returns>Final list of session ids of WAMP connections to receive message.</returns>
-        private static IEnumerable<string> GetEventReceivers(IEnumerable<string> topicSubscribers, string senderSession, IEnumerable<string> eligible, IEnumerable<string> excludes, bool excludeMe)
+        private static IEnumerable<string> GetEventReceivers(Topic topic, string senderSession, IEnumerable<string> eligible, IEnumerable<string> excludes, bool excludeMe)
         {
-            var receivers = topicSubscribers;
+            IEnumerable<string> receivers = topic.Sessions;
             if (eligible != null && eligible.Any())
-                return topicSubscribers.Intersect(eligible);
+                return topic.Sessions.Intersect(eligible);
 
             if (excludes != null && excludes.Any())
                 receivers = receivers.Except(excludes);

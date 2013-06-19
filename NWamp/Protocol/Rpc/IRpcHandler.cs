@@ -19,6 +19,13 @@ namespace NWamp.Protocol.Rpc
         event CallInvokedEventHandler CallInvoked;
 
         /// <summary>
+        /// Gets mapping function used for resolving proper type of parsed RPC request parameters.
+        /// 
+        /// Function: (object sourceObject, Type sourceType, Type destinationType) => object destinationObject.
+        /// </summary>
+        Func<object, Type, Type, object> TypeResolver { get; }
+
+        /// <summary>
         /// Performs RPC method call. This is a synchronous method.
         /// </summary>
         /// <param name="callId">Current call identifier.</param>
@@ -39,6 +46,5 @@ namespace NWamp.Protocol.Rpc
         /// </summary>
         /// <param name="procUri">Procedure URI identifier.</param>
         void UnregisterRpcAction(string procUri);
-
     }
 }

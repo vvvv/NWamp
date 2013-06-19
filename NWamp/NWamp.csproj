@@ -46,6 +46,7 @@
     <Compile Include="Mapping\PrefixMap.cs" />
     <Compile Include="Mapping\WampPrefixException.cs" />
     <Compile Include="Mapping\MessageMapper.cs" />
+    <Compile Include="Protocol\Events\Topic.cs" />
     <Compile Include="Protocol\Rpc\CallParameters.cs" />
     <Compile Include="Protocol\Events\ConnectionSubscribedEventArgs.cs" />
     <Compile Include="Protocol\Events\ConnectionSubscribingEventArgs.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="Protocol\Rpc\CallInvokedEventArgs.cs" />
     <Compile Include="Protocol\Rpc\CallInvokingEventArgs.cs" />
     <Compile Include="Protocol\Rpc\IRpcHandler.cs" />
+    <Compile Include="Protocol\Rpc\ProcedureDefinition.cs" />
     <Compile Include="Protocol\Rpc\RpcEventArgs.cs" />
     <Compile Include="RpcExtensions.cs" />
     <Compile Include="SessionEventArgs.cs" />
