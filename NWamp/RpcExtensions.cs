@@ -52,7 +52,7 @@ namespace NWamp
                         "Incompatibile number of arguments provided to registered action. Procedure uri: " + procId);
 
                 if (!(args[0] is T1)) args[0] = self.TypeResolver(args[0], args[0].GetType(), typeof(T1));
-                if (!(args[1] is T1)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
+                if (!(args[1] is T2)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
 
                 action.DynamicInvoke(args);
                 return null;
@@ -71,8 +71,8 @@ namespace NWamp
                         "Incompatibile number of arguments provided to registered action. Procedure uri: " + procId);
 
                 if (!(args[0] is T1)) args[0] = self.TypeResolver(args[0], args[0].GetType(), typeof(T1));
-                if (!(args[1] is T1)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
-                if (!(args[2] is T1)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
+                if (!(args[1] is T2)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
+                if (!(args[2] is T3)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
 
                 action.DynamicInvoke(args);
                 return null;
@@ -91,9 +91,9 @@ namespace NWamp
                         "Incompatibile number of arguments provided to registered action. Procedure uri: " + procId);
 
                 if (!(args[0] is T1)) args[0] = self.TypeResolver(args[0], args[0].GetType(), typeof(T1));
-                if (!(args[1] is T1)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
-                if (!(args[2] is T1)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
-                if (!(args[3] is T1)) args[3] = self.TypeResolver(args[3], args[3].GetType(), typeof(T4));
+                if (!(args[1] is T2)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
+                if (!(args[2] is T3)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
+                if (!(args[3] is T4)) args[3] = self.TypeResolver(args[3], args[3].GetType(), typeof(T4));
 
                 action.DynamicInvoke(args);
                 return null;
@@ -141,7 +141,7 @@ namespace NWamp
                         "Incompatibile number of arguments provided to registered action. Procedure uri: " + procId);
 
                 if (!(args[0] is T1)) args[0] = self.TypeResolver(args[0], args[0].GetType(), typeof(T1));
-                if (!(args[1] is T1)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
+                if (!(args[1] is T2)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
 
                 return func.DynamicInvoke(args);
             });
@@ -159,8 +159,8 @@ namespace NWamp
                         "Incompatibile number of arguments provided to registered action. Procedure uri: " + procId);
 
                 if (!(args[0] is T1)) args[0] = self.TypeResolver(args[0], args[0].GetType(), typeof(T1));
-                if (!(args[1] is T1)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
-                if (!(args[2] is T1)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
+                if (!(args[1] is T2)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
+                if (!(args[2] is T3)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
 
                 return func.DynamicInvoke(args);
             });
@@ -178,9 +178,9 @@ namespace NWamp
                         "Incompatibile number of arguments provided to registered action. Procedure uri: " + procId);
 
                 if (!(args[0] is T1)) args[0] = self.TypeResolver(args[0], args[0].GetType(), typeof(T1));
-                if (!(args[1] is T1)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
-                if (!(args[2] is T1)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
-                if (!(args[3] is T1)) args[3] = self.TypeResolver(args[3], args[3].GetType(), typeof(T4));
+                if (!(args[1] is T2)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
+                if (!(args[2] is T3)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
+                if (!(args[3] is T4)) args[3] = self.TypeResolver(args[3], args[3].GetType(), typeof(T4));
 
                 return func.DynamicInvoke(args);
             });
