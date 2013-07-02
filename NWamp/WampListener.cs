@@ -227,7 +227,7 @@ namespace NWamp
         /// <param name="connection">Reference to web socket connection, which sent a message.</param>
         public virtual void OnReceived(string json, IWampConnection connection)
         {
-            var array = this.DeserializeMessageFrame(json) as object[];
+        	var array = this.DeserializeMessageFrame(json) as object[];
             if (array != null)
             {
                 var msg = MessageMapper.Get(array);
@@ -313,12 +313,14 @@ namespace NWamp
         protected void OnCallMessage(CallMessage message, IWampConnection connection)
         {
             var tokenSource = new CancellationTokenSource();
-            var callTask = Task.Factory.StartNew(param => this.HandleCallRequest(param as CallParameters), 
-                new CallParameters(message.CallId, message.ProcUri, message.Arguments.ToArray(), connection), 
-                tokenSource.Token);
+//            var callTask = Task.Factory.StartNew(param => this.HandleCallRequest(param as CallParameters), 
+//                new CallParameters(message.CallId, message.ProcUri, message.Arguments.ToArray(), connection), 
+//                tokenSource.Token);
+            
+			HandleCallRequest(new CallParameters(message.CallId, message.ProcUri, message.Arguments.ToArray(), connection));
 
             // try to add method call handler
-            this.calls.TryAdd(message.CallId, callTask);
+            //this.calls.TryAdd(message.CallId, callTask);
 
             // fire event on call started
             if (this.CallInvoking != null)
