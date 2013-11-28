@@ -99,6 +99,29 @@ namespace NWamp
                 return null;
             });
         }
+        
+         /// <summary>
+        /// Register a method handler delegate under specific WAMP procedure URI identifier.
+        /// </summary>
+        public static void RegisterAction<T1, T2, T3, T4, T5>(this IRpcHandler self, string procId, Action<T1, T2, T3, T4, T5> action)
+        {
+            self.RegisterRpcAction(procId, args =>
+            {
+                if (args.Length < 5)
+                    throw new ArgumentException(
+                        "Incompatibile number of arguments provided to registered action. Procedure uri: " + procId);
+
+                if (!(args[0] is T1)) args[0] = self.TypeResolver(args[0], args[0].GetType(), typeof(T1));
+                if (!(args[1] is T2)) args[1] = self.TypeResolver(args[1], args[1].GetType(), typeof(T2));
+                if (!(args[2] is T3)) args[2] = self.TypeResolver(args[2], args[2].GetType(), typeof(T3));
+                if (!(args[3] is T4)) args[3] = self.TypeResolver(args[3], args[3].GetType(), typeof(T4));
+                if (!(args[4] is T5)) args[4] = self.TypeResolver(args[4], args[4].GetType(), typeof(T5));
+
+                action.DynamicInvoke(args);
+                return null;
+            });
+        }
+
 
         #endregion
 

@@ -358,7 +358,17 @@ namespace NWamp
             catch (Exception exc)
             {
                 exception = exc;
-                throw;
+                System.Diagnostics.Debug.WriteLine("WAMP exception message: " + exc.GetType().Name + ": " + exc.Message);
+                System.Diagnostics.Debug.WriteLine("WAMP exception stack trace: " + exc.StackTrace);
+                
+                if(exc.InnerException != null)
+                {
+                	var inexc = exc.InnerException;
+                	System.Diagnostics.Debug.WriteLine("WAMP inner exception message: " + inexc.GetType().Name + ": " + inexc.Message);
+                	System.Diagnostics.Debug.WriteLine("WAMP inner exception stack trace: " + inexc.StackTrace);
+                }
+                
+                //throw;
             }
             finally
             {
