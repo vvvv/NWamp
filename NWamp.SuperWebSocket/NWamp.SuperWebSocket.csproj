@@ -74,7 +74,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NWamp\NWamp\NWamp.csproj">
+    <ProjectReference Include="..\NWamp\NWamp.csproj">
       <Project>{34E319A3-DC94-41A4-B09E-BCA2EFA989D5}</Project>
       <Name>NWamp</Name>
     </ProjectReference>
