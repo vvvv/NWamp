@@ -1,47 +1,47 @@
-﻿namespace NWamp.Transport
-{
-    using Alchemy.Classes;
-    using NWamp.Mapping;
-    using NWamp.Transport;
+﻿using Alchemy.Classes;
+using NWamp.Transport;
 
+namespace NWamp
+{
     /// <summary>
-    /// WAMP connection implementation using Alchemy websockets.
+    /// Implementation of <see cref="IWampConnection"/> interface using Alchemy web sockets.
     /// </summary>
     public class AlchemyWampConnection : IWampConnection
     {
         /// <summary>
-        /// Gets or sets WAMP session identifier for current connection.
+        /// Alchemy web socket client context.
         /// </summary>
-        public string SessionId { get; set; }
+        private readonly UserContext _context;
 
         /// <summary>
-        /// Gets Alchemy websockets user context associated with current connection.
+        /// Initializes a new instance of the <see cref="AlchemyWampConnection"/> class.
         /// </summary>
-        public UserContext UserContext { get; private set; }
-
-        /// <summary>
-        /// Gets list of CURIE-URI prefixes specific for current connection.
-        /// </summary>
-        public PrefixMap Prefixes { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AlchemyWampConnection"/> class using provided 
-        /// Alchemy <see cref="UserContext"/> connection object.
-        /// </summary>
-        /// <param name="context">Context used for accessing related web socket connection.</param>
-        public AlchemyWampConnection(UserContext context)
+        /// <param name="userContext">Alchemy web socket client context</param>
+        public AlchemyWampConnection(UserContext userContext)
         {
-            this.Prefixes = new PrefixMap();
-            this.UserContext = context;
+            _context = userContext;
         }
 
         /// <summary>
-        /// Sends a JSON-stringified object through web socket connection.
+        /// Gets alchemy user context for current connection.
         /// </summary>
-        /// <param name="json">String representing object in JSON notation.</param>
-        public void SendMessage(string json)
+        public UserContext Context { get { return _context; } }
+
+        /// <summary>
+        /// Sends a JSON string to throug current connection to target client.
+        /// </summary>
+        /// <param name="json">JSON string</param>
+        public void Send(string json)
         {
-            this.UserContext.Send(json);
+            _context.Send(json);
+        }
+
+        /// <summary>
+        /// Disposes current client connection
+        /// </summary>
+        public void Dispose()
+        {
+            _context.OnDisconnect();
         }
     }
 }

@@ -1,13 +1,22 @@
+﻿using System;
+
 namespace NWamp
 {
-    using System;
-
     /// <summary>
-    /// Common exception derived by all NWAMP custom implementation exceptions.
+    /// Common WAMP exception class.
     /// </summary>
-    public class WampException :Exception
+    public class WampException : Exception
     {
-        public WampException(string msg):base(msg)
+        public WampException():base()
+        {
+        }
+
+        public WampException(string msgFormat, params object[] args)
+            :base(string.Format(msgFormat, args))
+        {
+        }
+
+        public  WampException(string msg, Exception innerException):base(msg, innerException)
         {
         }
     }

@@ -4,17 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7C335119-2F26-484A-856F-0DECC544C0DE}</ProjectGuid>
+    <ProjectGuid>{AB6D9CF7-A965-49A3-A207-1E890E52B4C2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NWamp</RootNamespace>
+    <RootNamespace>NWamp.Alchemy</RootNamespace>
     <AssemblyName>NWamp.SuperWebSocket</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
     <NoWin32Manifest>False</NoWin32Manifest>
-    <SignAssembly>False</SignAssembly>
-    <DelaySign>False</DelaySign>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
     <NoStdLib>False</NoStdLib>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
@@ -40,24 +38,22 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
-    <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <BaseAddress>4194304</BaseAddress>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <Prefer32Bit>False</Prefer32Bit>
     <RegisterForComInterop>False</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SuperSocket.Common">
-      <HintPath>dependencies\SuperSocket.Common.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\NWamp.Examples.NonASP\Alchemy\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="SuperSocket.SocketBase">
-      <HintPath>dependencies\SuperSocket.SocketBase.dll</HintPath>
+      <HintPath>Dependencies\SuperSocket.SocketBase.dll</HintPath>
     </Reference>
     <Reference Include="SuperWebSocket">
-      <HintPath>dependencies\SuperWebSocket.dll</HintPath>
+      <HintPath>Dependencies\SuperWebSocket.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -69,15 +65,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SuperWebSocketWampClient.cs" />
     <Compile Include="SuperWebSocketWampConnection.cs" />
-    <Compile Include="SuperWebSocketWampListener.cs" />
+    <Compile Include="SuperWebSocketWampHost.cs" />
+    <Compile Include="NewtonsoftTypeResolver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="NewtonsoftWampMessageProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NWamp\NWamp\NWamp.csproj">
-      <Project>{34E319A3-DC94-41A4-B09E-BCA2EFA989D5}</Project>
+    <ProjectReference Include="..\NWamp\NWamp.csproj">
+      <Project>{9cd6a565-1f00-431a-a3d7-746508b05b7b}</Project>
       <Name>NWamp</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

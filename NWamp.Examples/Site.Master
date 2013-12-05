@@ -1,0 +1,56 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="NWamp.Examples.Site" %>
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head runat="server">
+    <title>NWamp: Examples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="Content/bootstrap/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body style="padding:30px;">
+    <div class="container">
+    <div class="navbar navbar-inverse navbar-default">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="Default.aspx">NWamp Examples</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="Rpc.aspx">Simple RPC Example</a></li>
+            <li><a href="PubSub.aspx">Simple PubSub Example</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+        <div class="container">
+            <div class="alert alert-success" data-bind="visible: connected">
+                WAMP session active.
+            </div>
+            <div class="alert alert-danger" data-bind="visible: !connected">
+                WebSocket Application Messaging Protocol inactive (session could not be initialized).
+            </div>
+            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+        
+            </asp:ContentPlaceHolder>
+            <div class="col-md-6 pull-right">
+                <ul class="list-group" data-bind="foreach: logs">
+                    <li class="list-group-item" data-bind="html: msg"> </li>
+                </ul>
+            </div>
+        </div>
+        <script type="text/javascript" src="Scripts/jquery-2.0.3.js"></script>
+        <script type="text/javascript" src="Scripts/bootstrap.js"></script>
+        <script type="text/javascript" src="Scripts/knockout-2.3.0.debug.js"></script>
+        <script type="text/javascript" src="http://autobahn.s3.amazonaws.com/js/autobahn.js"></script>
+        <script src="Scripts/app/app.js"></script>
+    </div>
+    <asp:ContentPlaceHolder ID="scripts" runat="server">
+    </asp:ContentPlaceHolder>
+</body>
+</html>
